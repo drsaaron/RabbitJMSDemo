@@ -9,9 +9,12 @@ import com.rabbitmq.jms.admin.RMQDestination;
 import jakarta.jms.ConnectionFactory;
 import jakarta.jms.Destination;
 import jakarta.jms.MessageListener;
-import jakarta.jms.Queue;
 import jakarta.jms.Session;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +32,37 @@ public class RabbitJMSConfiguration {
     private final String exchangeName = "jms-demo";
     private final String routingKey = "jms-sender-1";
     private final String queueName = "jms-demo-consumer-1";
+    private final String queue2Name = "jms-demo-consumer-2";
+    
+    // define the infrastructure as code, though we won't use these.
+    @Bean
+    public TopicExchange topicExchange() {
+        return new TopicExchange(exchangeName, true, false);
+    }
+    
+    @Bean
+    public Queue jmsConsumerQueue1() {
+        Queue q = new Queue(queueName);
+        return q;
+    }
+    
+    @Bean
+    public Queue jmsConsumerQueue2() {
+        Queue q = new Queue(queue2Name);
+        return q;
+    }
+    
+    @Bean
+    public Binding jmsConsumerQueue1Binding(TopicExchange topicExchange, Queue jmsConsumerQueue1) {
+        return BindingBuilder.bind(jmsConsumerQueue1).to(topicExchange).with(routingKey);
+    }
+    
+    @Bean
+    public Binding jmsConsumerQueue2Binding(TopicExchange topicExchange, Queue jmsConsumerQueue2) {
+        return BindingBuilder.bind(jmsConsumerQueue2).to(topicExchange).with(routingKey);
+    }
+    
+    // now onto the JMS stuff which we will use
     
     @Bean
     public ConnectionFactory jmsConnectionFactory() {
@@ -63,7 +97,7 @@ public class RabbitJMSConfiguration {
     private ErrorHandler loggingErrorHandler;
     
     @Bean
-    public SimpleMessageListenerContainer container(ConnectionFactory jmsConnectionFactory, Queue consumerQueue) {
+    public SimpleMessageListenerContainer container(ConnectionFactory jmsConnectionFactory, Destination consumerQueue) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
 
         container.setConnectionFactory(jmsConnectionFactory);

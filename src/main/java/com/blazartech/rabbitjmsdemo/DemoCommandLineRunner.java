@@ -6,6 +6,8 @@ package com.blazartech.rabbitjmsdemo;
 
 import com.blazartech.rabbitjmsdemo.sender.DemoMessageSender;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -34,7 +36,13 @@ public class DemoCommandLineRunner implements CommandLineRunner {
                 new DemoMessage(5, "Paul", 82)
         );
         
-        messages.stream()
+        IntStream intStream = IntStream.range(10, 1000);
+        List<DemoMessage> bigMessageList = intStream
+                .mapToObj(i -> new DemoMessage(i, "name-" + Integer.toString(i), i % 25))
+                .collect(Collectors.toList());
+        bigMessageList.addAll(messages);
+        
+        bigMessageList.stream()
                 .peek(m -> log.info("sending {}", m))
                 .forEach(m -> sender.sendMessage(m));
     }

@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Slf4j
-public class DemoMessageListener implements MessageListener {
+public class JMSDemoMessageListener implements MessageListener {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
     

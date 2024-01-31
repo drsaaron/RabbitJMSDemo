@@ -15,6 +15,8 @@ import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +35,7 @@ public class RabbitJMSConfiguration {
     private final String routingKey = "jms-sender-1";
     private final String queueName = "jms-demo-consumer-1";
     private final String queue2Name = "jms-demo-consumer-2";
+    private final String queue3Name = "jms-demo-consumer-3";
     
     // define the infrastructure as code, though we won't use these.
     @Bean
@@ -53,6 +56,12 @@ public class RabbitJMSConfiguration {
     }
     
     @Bean
+    public Queue jmsConsumerQueue3() {
+        Queue q = new Queue(queue3Name);
+        return q;
+    }
+    
+    @Bean
     public Binding jmsConsumerQueue1Binding(TopicExchange topicExchange, Queue jmsConsumerQueue1) {
         return BindingBuilder.bind(jmsConsumerQueue1).to(topicExchange).with(routingKey);
     }
@@ -60,6 +69,11 @@ public class RabbitJMSConfiguration {
     @Bean
     public Binding jmsConsumerQueue2Binding(TopicExchange topicExchange, Queue jmsConsumerQueue2) {
         return BindingBuilder.bind(jmsConsumerQueue2).to(topicExchange).with(routingKey);
+    }
+    
+    @Bean
+    public Binding jmsConsumerQueue3Binding(TopicExchange topicExchange, Queue jmsConsumerQueue3) {
+        return BindingBuilder.bind(jmsConsumerQueue3).to(topicExchange).with(routingKey);
     }
     
     // now onto the JMS stuff which we will use
@@ -77,12 +91,9 @@ public class RabbitJMSConfiguration {
     
     @Bean
     public Destination consumerQueue() {
-//        RMQDestination jmsDestination = new RMQDestination(queueName, true, false);
         RMQDestination jmsDestination = new RMQDestination();
         jmsDestination.setAmqp(true);
-//        jmsDestination.setAmqpExchangeName(exchangeName);
         jmsDestination.setAmqpQueueName(queueName);
-//        jmsDestination.setAmqpRoutingKey(routingKey);
         jmsDestination.setQueue(true);
         jmsDestination.setDestinationName(queueName);
 
@@ -105,7 +116,7 @@ public class RabbitJMSConfiguration {
         container.setDestination(consumerQueue);
         container.setMessageListener(demoMessageListener);
         container.setSessionTransacted(true);
-        container.setConcurrency("5");
+        container.setConcurrency("10");
         container.setErrorHandler(loggingErrorHandler);
 
         return container;
@@ -122,5 +133,10 @@ public class RabbitJMSConfiguration {
 
         log.info("publishQueue = {}", jmsDestination);
         return jmsDestination;
+    }
+    
+    @Bean
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
     }
 }

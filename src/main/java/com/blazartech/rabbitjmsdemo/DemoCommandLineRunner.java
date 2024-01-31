@@ -28,21 +28,11 @@ public class DemoCommandLineRunner implements CommandLineRunner {
     public void run(String... args) throws Exception {
         log.info("starting to send messages");
         
-        List<DemoMessage> messages = List.of(
-                new DemoMessage(1, "Scott", 25),
-                new DemoMessage(2, "Eddie", 65),
-                new DemoMessage(3, "Robert", 79),
-                new DemoMessage(4, "Jimmy", 81),
-                new DemoMessage(5, "Paul", 82)
-        );
-        
-        IntStream intStream = IntStream.range(10, 1000);
-        List<DemoMessage> bigMessageList = intStream
+        List<DemoMessage> messages = IntStream.range(0, 1000)
                 .mapToObj(i -> new DemoMessage(i, "name-" + Integer.toString(i), i % 25))
                 .collect(Collectors.toList());
-        bigMessageList.addAll(messages);
         
-        bigMessageList.stream()
+        messages.stream()
                 .peek(m -> log.info("sending {}", m))
                 .forEach(m -> sender.sendMessage(m));
     }

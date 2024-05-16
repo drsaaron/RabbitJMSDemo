@@ -4,8 +4,7 @@
  */
 package com.blazartech.rabbitjmsdemo;
 
-import com.blazartech.futureutils.FutureGetter;
-import com.blazartech.rabbitjmsdemo.sender.DemoMessageSenderAsync;
+import com.blazartech.rabbitjmsdemo.sender.DemoMessageSender;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -23,7 +22,7 @@ import org.springframework.stereotype.Component;
 public class DemoCommandLineRunner implements CommandLineRunner {
 
     @Autowired
-    private DemoMessageSenderAsync sender;
+    private DemoMessageSender sender;
     
     @Override
     public void run(String... args) throws Exception {
@@ -33,12 +32,9 @@ public class DemoCommandLineRunner implements CommandLineRunner {
                 .mapToObj(i -> new DemoMessage(i, "name-" + Integer.toString(i), i % 25))
                 .collect(Collectors.toList());
         
-        messages.stream()
+        messages.parallelStream()
                 .peek(m -> log.info("sending {}", m))
-                .map(m -> sender.sendMessage(m))
-                .collect(Collectors.toList())
-                .stream()
-                .map(new FutureGetter<>());
+                .forEach(m -> sender.sendMessage(m));
     }
     
 }
